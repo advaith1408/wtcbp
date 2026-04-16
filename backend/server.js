@@ -14,6 +14,9 @@ app.use(express.json());
 const studentRoutes = require('./routes/studentRoutes');
 app.use('/api/students', studentRoutes);
 
+// Health Check
+app.get('/health', (req, res) => res.status(200).json({ status: 'OK' }));
+
 // Database Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/student_tracker')
   .then(() => console.log('MongoDB connected'))
