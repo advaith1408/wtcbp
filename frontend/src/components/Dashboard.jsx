@@ -5,9 +5,11 @@ import {
 } from 'recharts';
 import { 
   Users, CheckCircle, AlertTriangle, TrendingUp, Award, 
-  BookOpen, FileText, Cpu, CheckCircle2, Circle
+  BookOpen, FileText, Cpu, CheckCircle2, Circle, Download
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
   <div className="glass-card flex items-center justify-between">
@@ -65,6 +67,7 @@ const DetailCard = ({ label, avg, subRate, icon: Icon }) => {
 
 const Dashboard = ({ students }) => {
   const analytics = useMemo(() => {
+    console.log('Dashboard Data Update - Students Count:', students.length);
     if (!students.length) return null;
 
     const fields = ['mid1', 'mid2', 'assignment1', 'assignment2', 'ela1', 'ela2', 'cbp'];
@@ -113,6 +116,100 @@ const Dashboard = ({ students }) => {
     return { detailedMetrics, performanceData, overallSubRate, pieData, COLORS, atRisk };
   }, [students]);
 
+  const downloadPDF = async () => {
+    const dashboard = document.getElementById('report-container');
+    if (!dashboard) return;
+
+    try {
+      // Ensure we're at the top for a clean capture
+      window.scrollTo(0, 0);
+      
+      const canvas = await html2canvas(dashboard, {
+        backgroundColor: '#09090b',
+        scale: 3, // High quality
+        useCORS: true,
+        logging: false,
+        onclone: (clonedDoc) => {
+          const style = clonedDoc.createElement('style');
+          style.innerHTML = `
+            :root, * {
+              --color-blue-500: #3b82f6 !important;
+              --color-blue-600: #2563eb !important;
+              --color-emerald-400: #34d399 !important;
+              --color-emerald-500: #10b981 !important;
+              --color-red-400: #f87171 !important;
+              --color-red-500: #ef4444 !important;
+              --color-purple-500: #a855f7 !important;
+              --color-white: #ffffff !important;
+              --color-black: #000000 !important;
+              --color-zinc-950: #09090b !important;
+              --color-zinc-900: #18181b !important;
+            }
+            #report-container { 
+              background-color: #09090b !important; 
+              color: #ffffff !important;
+              padding: 40px !important;
+            }
+            .glass-card { 
+              background: rgba(255, 255, 255, 0.05) !important; 
+              border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+              backdrop-filter: none !important; 
+            }
+            .text-white { color: #ffffff !important; }
+            .text-blue-500 { color: #3b82f6 !important; }
+          `;
+          clonedDoc.head.appendChild(style);
+        }
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // Calculate dimensions
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+      let pageNum = 1;
+
+      // Add First Page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      
+      // Add Header/Footer to first page
+      pdf.setFontSize(10);
+      pdf.setTextColor(150);
+      pdf.text('Student Analytics Report', 10, 10);
+      pdf.text(`Page ${pageNum}`, pageWidth - 20, pageHeight - 10);
+
+      heightLeft -= pageHeight;
+
+      // Add subsequent pages if content overflows
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pageNum++;
+        
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        
+        // Add Header/Footer
+        pdf.setFontSize(10);
+        pdf.setTextColor(150);
+        pdf.text('Student Analytics Report', 10, 10);
+        pdf.text(`Page ${pageNum}`, pageWidth - 20, pageHeight - 10);
+        
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`Student_Analytics_Report_${new Date().toLocaleDateString()}.pdf`);
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      alert('PDF Generation failed: ' + err.message);
+    }
+  };
+
   if (!analytics) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-white/40 glass-card">
@@ -123,7 +220,27 @@ const Dashboard = ({ students }) => {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+      {/* Top Header with Action - OUTSIDE the capture area */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="text-blue-500" size={24} />
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Performance Analytics</h2>
+        </div>
+        <button 
+          onClick={downloadPDF}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all text-sm font-bold shadow-lg shadow-blue-600/20"
+        >
+          <Download size={16} />
+          Download PDF Report
+        </button>
+      </div>
+
+      <div id="report-container" className="space-y-8 p-4 bg-[#09090b] rounded-2xl">
+        <div className="p-2 border-b border-white/5 mb-4">
+          <h1 className="text-sm font-black text-white/20 uppercase tracking-widest">Academic Status Report • {new Date().toLocaleDateString()}</h1>
+        </div>
+
       {/* Top Level Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Students" value={students.length} icon={Users} color="blue" />
@@ -139,18 +256,73 @@ const Dashboard = ({ students }) => {
           <h3 className="text-xl font-black text-white uppercase tracking-tight">Assessment Command Center</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {analytics.detailedMetrics.map(metric => (
-            <DetailCard key={metric.key} {...metric} />
-          ))}
+          {analytics.detailedMetrics.map(metric => {
+            const { key, ...rest } = metric;
+            return <DetailCard key={key} {...rest} />;
+          })}
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Visual Trends */}
+      {/* Assessment Specific Submission Breakdown */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Award className="text-emerald-400" size={20} />
+          <h3 className="text-xl font-black text-white uppercase tracking-tight">Submission Breakdown (Pie Charts)</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {analytics.detailedMetrics.map(metric => {
+            const pieData = [
+              { name: 'Submitted', value: students.filter(s => s[metric.key]?.submitted).length },
+              { name: 'Pending', value: students.length - students.filter(s => s[metric.key]?.submitted).length }
+            ];
+            
+            return (
+              <div key={metric.key} className="glass-card flex flex-col items-center justify-center p-4 min-h-[220px] h-[220px]">
+                <h4 className="text-white font-bold text-xs uppercase tracking-widest mb-2">{metric.label}</h4>
+                <div className="flex-1 w-full min-h-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={35}
+                        outerRadius={55}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        <Cell fill="#10b981" />
+                        <Cell fill="#ef4444" />
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#111114', border: '1px solid #ffffff10', borderRadius: '8px', fontSize: '10px' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex gap-4 mt-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-[10px] text-white/60">{pieData[0].value} Done</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                    <span className="text-[10px] text-white/60">{pieData[1].value} Pend</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+        {/* Visual Trends - Bar Chart */}
         <motion.div className="glass-card space-y-6">
           <div className="flex items-center gap-2">
             <TrendingUp className="text-blue-400" size={20} />
-            <h3 className="text-lg font-bold text-white uppercase tracking-wider text-sm">Performance Trends</h3>
+            <h3 className="text-lg font-bold text-white uppercase tracking-wider text-sm">Average Marks Distribution</h3>
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -162,40 +334,8 @@ const Dashboard = ({ students }) => {
                   cursor={{fill: 'rgba(255,255,255,0.05)'}}
                   contentStyle={{ backgroundColor: '#111114', border: '1px solid #ffffff10', borderRadius: '12px' }}
                 />
-                <Bar dataKey="avg" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={30} />
+                <Bar dataKey="avg" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={40} />
               </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-
-        {/* Global Submission status */}
-        <motion.div className="glass-card space-y-6">
-          <div className="flex items-center gap-2">
-            <Award className="text-emerald-400" size={20} />
-            <h3 className="text-lg font-bold text-white uppercase tracking-wider text-sm">Global Audit Status</h3>
-          </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={analytics.pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={100}
-                  paddingAngle={10}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {analytics.pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={analytics.COLORS[index % analytics.COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#111114', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-              </PieChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
@@ -256,6 +396,7 @@ const Dashboard = ({ students }) => {
               )}
             </tbody>
           </table>
+        </div>
         </div>
       </div>
     </div>

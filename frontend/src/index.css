@@ -11,6 +11,16 @@
   --background-image-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
+/* Force standard RGB/Hex for PDF compatibility */
+:root {
+  --color-blue-500: #3b82f6 !important;
+  --color-blue-600: #2563eb !important;
+  --color-emerald-500: #10b981 !important;
+  --color-red-500: #ef4444 !important;
+  --color-white: #ffffff !important;
+  --color-black: #000000 !important;
+}
+
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

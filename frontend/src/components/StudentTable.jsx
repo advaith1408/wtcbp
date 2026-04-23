@@ -3,13 +3,22 @@ import { Trash2, Save, X, CheckSquare, Square, AlertCircle } from 'lucide-react'
 import { updateStudent, deleteStudent } from '../api/studentApi';
 import { clsx } from 'clsx';
 
-const AcademicCell = ({ studentId, field, data, onUpdate }) => {
+const AcademicCell = ({ studentId, field, data = { marks: 0, submitted: false }, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [marks, setMarks] = useState(data.marks);
+  const [marks, setMarks] = useState(data?.marks || 0);
+
+  React.useEffect(() => {
+    setMarks(data?.marks || 0);
+  }, [data?.marks]);
 
   const handleSave = async () => {
     try {
-      await onUpdate(studentId, { [field]: { ...data, marks: Number(marks) } });
+      await onUpdate(studentId, { 
+        [field]: { 
+          marks: Number(marks), 
+          submitted: true // Mark as submitted when saved
+        } 
+      });
       setIsEditing(false);
     } catch (err) {
       console.error(err);
@@ -88,10 +97,20 @@ const StudentTable = ({ students, refreshData }) => {
     refreshData();
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Delete button clicked for student:', id);
+    
     if (window.confirm('Are you sure you want to delete this student?')) {
-      await deleteStudent(id);
-      refreshData();
+      try {
+        await deleteStudent(id);
+        console.log('Student deleted successfully');
+        refreshData();
+      } catch (err) {
+        console.error('Failed to delete student:', err);
+        alert('Failed to delete student. Please try again.');
+      }
     }
   };
 
@@ -142,7 +161,7 @@ const StudentTable = ({ students, refreshData }) => {
 
                   <td className="p-4 text-center">
                     <button 
-                      onClick={() => handleDelete(student._id)}
+                      onClick={(e) => handleDelete(e, student._id)}
                       className="text-red-400/50 hover:text-red-400 p-2 hover:bg-red-400/10 rounded-lg transition-all"
                     >
                       <Trash2 size={18} />
