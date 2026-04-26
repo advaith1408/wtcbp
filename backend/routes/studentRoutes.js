@@ -101,6 +101,11 @@ router.post('/bulk', auth, async (req, res) => {
     });
 
     const result = await Student.bulkWrite(operations, { ordered: false });
+    
+    // Log the first student's update object for debugging
+    if (operations.length > 0) {
+      console.log('Sample Update Object (First Student):', JSON.stringify(operations[0].updateOne.update.$set, null, 2));
+    }
     console.log('Bulk Write Result Summary:', {
       upserted: result.upsertedCount,
       modified: result.modifiedCount,

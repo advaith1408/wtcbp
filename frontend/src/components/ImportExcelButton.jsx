@@ -89,13 +89,13 @@ const ImportExcelButton = ({ onRefresh }) => {
             year: findVal(['year', 'yr', 'academic']) || '1st Year',
             branch: findVal(['branch', 'dept', 'department']) || 'CSE',
             section: (findVal(['section', 'sec', 'class']) || 'A').toString().trim().toUpperCase(),
-            mid1: getMarks(['mid 1', 'mid1', 'm1', 'mid-1']),
-            mid2: getMarks(['mid 2', 'mid2', 'm2', 'mid-2']),
-            assignment1: getMarks(['assignment 1', 'asgn 1', 'a1', 'assignment1', 'asgn-1', 'asgn1']),
-            assignment2: getMarks(['assignment 2', 'asgn 2', 'a2', 'assignment2', 'asgn-2', 'asgn2']),
-            ela1: getMarks(['ela 1', 'ela1', 'e1', 'ela-1']),
-            ela2: getMarks(['ela 2', 'ela2', 'e2', 'ela-2']),
-            cbp: getMarks(['cbp', 'cp', 'cbp-marks'])
+            mid1: getMarks(['mid 1', 'mid1', 'm1', 'mid-1', 'mid i', 'mid-i']),
+            mid2: getMarks(['mid 2', 'mid2', 'm2', 'mid-2', 'mid ii', 'mid-ii']),
+            assignment1: getMarks(['assignment 1', 'asgn 1', 'a1', 'assignment1', 'asgn-1', 'asgn1', 'assignment i', 'a-1']),
+            assignment2: getMarks(['assignment 2', 'asgn 2', 'a2', 'assignment2', 'asgn-2', 'asgn2', 'assignment ii', 'a-2']),
+            ela1: getMarks(['ela 1', 'ela1', 'e1', 'ela-1', 'ela i', 'ela-i']),
+            ela2: getMarks(['ela 2', 'ela2', 'e2', 'ela-2', 'ela ii', 'ela-ii']),
+            cbp: getMarks(['cbp', 'cp', 'cbp-marks', 'cbp marks'])
           };
         }).filter(s => s !== null);
 

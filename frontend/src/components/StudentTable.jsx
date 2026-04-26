@@ -6,22 +6,40 @@ import { clsx } from 'clsx';
 const AcademicCell = ({ studentId, field, data = { marks: 0, submitted: false }, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [marks, setMarks] = useState(data?.marks || 0);
+  const [isSaving, setIsSaving] = useState(false);
 
   React.useEffect(() => {
     setMarks(data?.marks || 0);
   }, [data?.marks]);
 
   const handleSave = async () => {
+    if (Number(marks) === data?.marks && data?.submitted) {
+      setIsEditing(false);
+      return;
+    }
+
     try {
+      setIsSaving(true);
       await onUpdate(studentId, { 
         [field]: { 
           marks: Number(marks), 
-          submitted: true // Mark as submitted when saved
+          submitted: true 
         } 
       });
       setIsEditing(false);
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      setMarks(data?.marks || 0);
+      setIsEditing(false);
     }
   };
 
@@ -41,17 +59,20 @@ const AcademicCell = ({ studentId, field, data = { marks: 0, submitted: false },
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-2">
           {isEditing ? (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 w-full">
               <input
                 type="number"
-                className="w-12 bg-white/10 border border-white/20 rounded px-1 py-0.5 text-xs outline-none"
+                className={clsx(
+                  "w-full bg-white/10 border rounded px-1 py-0.5 text-xs outline-none transition-all",
+                  isSaving ? "border-blue-500/50 opacity-50" : "border-white/20 focus:border-blue-500/50"
+                )}
                 value={marks}
                 onChange={(e) => setMarks(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyDown}
                 autoFocus
+                disabled={isSaving}
               />
-              <button onClick={handleSave} className="text-emerald-400 hover:text-emerald-300">
-                <Save size={14} />
-              </button>
             </div>
           ) : (
             <div 

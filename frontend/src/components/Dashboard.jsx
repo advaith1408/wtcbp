@@ -117,96 +117,56 @@ const Dashboard = ({ students }) => {
   }, [students]);
 
   const downloadPDF = async () => {
-    const dashboard = document.getElementById('report-container');
-    if (!dashboard) return;
+    const reportElement = document.getElementById('report-container');
+    if (!reportElement) return;
 
     try {
-      // Ensure we're at the top for a clean capture
-      window.scrollTo(0, 0);
+      // Show loading toast or state if needed
+      console.log('Generating PDF report...');
       
-      const canvas = await html2canvas(dashboard, {
+      const canvas = await html2canvas(reportElement, {
         backgroundColor: '#09090b',
-        scale: 3, // High quality
+        scale: 2, // Balanced quality and performance
         useCORS: true,
         logging: false,
         onclone: (clonedDoc) => {
-          const style = clonedDoc.createElement('style');
-          style.innerHTML = `
-            :root, * {
-              --color-blue-500: #3b82f6 !important;
-              --color-blue-600: #2563eb !important;
-              --color-emerald-400: #34d399 !important;
-              --color-emerald-500: #10b981 !important;
-              --color-red-400: #f87171 !important;
-              --color-red-500: #ef4444 !important;
-              --color-purple-500: #a855f7 !important;
-              --color-white: #ffffff !important;
-              --color-black: #000000 !important;
-              --color-zinc-950: #09090b !important;
-              --color-zinc-900: #18181b !important;
-            }
-            #report-container { 
-              background-color: #09090b !important; 
-              color: #ffffff !important;
-              padding: 40px !important;
-            }
-            .glass-card { 
-              background: rgba(255, 255, 255, 0.05) !important; 
-              border: 1px solid rgba(255, 255, 255, 0.1) !important; 
-              backdrop-filter: none !important; 
-            }
-            .text-white { color: #ffffff !important; }
-            .text-blue-500 { color: #3b82f6 !important; }
-          `;
-          clonedDoc.head.appendChild(style);
+          // Force styles for the PDF capture
+          const element = clonedDoc.getElementById('report-container');
+          if (element) {
+            element.style.padding = '30px';
+            element.style.background = '#09090b';
+          }
         }
       });
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      // Calculate dimensions
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
+
+      const pdfWidth = 210; // A4 width in mm
+      const pdfHeight = 297; // A4 height in mm
+      const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+
       let heightLeft = imgHeight;
       let position = 0;
-      let pageNum = 1;
 
-      // Add First Page
+      // Add the first page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      
-      // Add Header/Footer to first page
-      pdf.setFontSize(10);
-      pdf.setTextColor(150);
-      pdf.text('Student Analytics Report', 10, 10);
-      pdf.text(`Page ${pageNum}`, pageWidth - 20, pageHeight - 10);
-
-      heightLeft -= pageHeight;
+      heightLeft -= pdfHeight;
 
       // Add subsequent pages if content overflows
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pageNum++;
-        
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        
-        // Add Header/Footer
-        pdf.setFontSize(10);
-        pdf.setTextColor(150);
-        pdf.text('Student Analytics Report', 10, 10);
-        pdf.text(`Page ${pageNum}`, pageWidth - 20, pageHeight - 10);
-        
-        heightLeft -= pageHeight;
+        heightLeft -= pdfHeight;
       }
 
-      pdf.save(`Student_Analytics_Report_${new Date().toLocaleDateString()}.pdf`);
+      const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
+      pdf.save(`Student_Analytics_Report_${dateStr}.pdf`);
     } catch (err) {
       console.error('PDF Generation Error:', err);
-      alert('PDF Generation failed: ' + err.message);
+      alert('Failed to generate PDF. Please ensure charts are fully loaded.');
     }
   };
 
