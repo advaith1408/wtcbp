@@ -23,7 +23,7 @@ const MainContent = ({
   return (
     <div className="min-h-screen p-4 md:p-8 space-y-8 max-w-[1600px] mx-auto">
       {/* Header Section */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 no-print">
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-blue-500">
             <GraduationCap size={32} />
@@ -83,7 +83,7 @@ const MainContent = ({
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-4"
+        className="space-y-4 no-print"
       >
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           <div className="lg:col-span-1 relative">
@@ -210,7 +210,7 @@ const MainContent = ({
       />
 
       {/* Footer */}
-      <footer className="text-center py-8 text-white/20 text-xs">
+      <footer className="text-center py-8 text-white/20 text-xs no-print">
         &copy; 2026 Student Academic Management System • Built for Excellence
       </footer>
     </div>

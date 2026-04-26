@@ -74,3 +74,105 @@ body {
     @apply bg-white/5 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all;
   }
 }
+
+/* Professional Print Styles */
+@media print {
+  body, html {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Target specific non-report elements instead of generic classes */
+  .no-print, 
+  header:not(#report-container header), 
+  footer:not(#report-container footer),
+  nav, 
+  button,
+  input,
+  select {
+    display: none !important;
+  }
+
+  /* Force dashboard container to be visible and occupy full space */
+  #report-container {
+    display: block !important;
+    width: 100% !important;
+    background: white !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    color: black !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Ensure all sections inside report are visible */
+  #report-container section, 
+  #report-container div {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  #report-container * {
+    color: black !important;
+    background-color: transparent !important;
+    border-color: #eee !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .glass-card {
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 20px !important;
+    padding: 20px !important;
+  }
+
+  /* Chart optimization */
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 350px !important;
+    min-height: 300px !important;
+  }
+
+  .text-white\/60, .text-white\/40, .text-white\/20, .text-white\/10 {
+    color: #333 !important;
+    opacity: 1 !important;
+  }
+
+  /* Fix for dark headers in report */
+  #report-container h1, 
+  #report-container h2, 
+  #report-container h3, 
+  #report-container h4 {
+    color: black !important;
+  }
+
+  /* Grid layout for printing */
+  .grid {
+    display: grid !important;
+    gap: 20px !important;
+  }
+
+  /* Maintain 4-column layout for small cards if possible, or 2x2 */
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .md\\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .lg\\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .grid-cols-1 {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -8,8 +8,6 @@ import {
   BookOpen, FileText, Cpu, CheckCircle2, Circle, Download
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
   <div className="glass-card flex items-center justify-between">
@@ -116,58 +114,15 @@ const Dashboard = ({ students }) => {
     return { detailedMetrics, performanceData, overallSubRate, pieData, COLORS, atRisk };
   }, [students]);
 
-  const downloadPDF = async () => {
-    const reportElement = document.getElementById('report-container');
-    if (!reportElement) return;
-
-    try {
-      // Show loading toast or state if needed
-      console.log('Generating PDF report...');
-      
-      const canvas = await html2canvas(reportElement, {
-        backgroundColor: '#09090b',
-        scale: 2, // Balanced quality and performance
-        useCORS: true,
-        logging: false,
-        onclone: (clonedDoc) => {
-          // Force styles for the PDF capture
-          const element = clonedDoc.getElementById('report-container');
-          if (element) {
-            element.style.padding = '30px';
-            element.style.background = '#09090b';
-          }
-        }
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-
-      const pdfWidth = 210; // A4 width in mm
-      const pdfHeight = 297; // A4 height in mm
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Add the first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pdfHeight;
-
-      // Add subsequent pages if content overflows
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pdfHeight;
-      }
-
-      const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
-      pdf.save(`Student_Analytics_Report_${dateStr}.pdf`);
-    } catch (err) {
-      console.error('PDF Generation Error:', err);
-      alert('Failed to generate PDF. Please ensure charts are fully loaded.');
-    }
+  const handlePrint = () => {
+    console.log("🖨️ Opening print dialog for professional report...");
+    const originalTitle = document.title;
+    document.title = "Student_Analytics_" + new Date().toLocaleDateString().replace(/\//g, '-');
+    window.print();
+    // Use a small delay to restore title after print dialog closes/opens
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
   };
 
   if (!analytics) {
@@ -188,11 +143,11 @@ const Dashboard = ({ students }) => {
           <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Performance Analytics</h2>
         </div>
         <button 
-          onClick={downloadPDF}
+          onClick={handlePrint}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all text-sm font-bold shadow-lg shadow-blue-600/20"
         >
           <Download size={16} />
-          Download PDF Report
+          Print Professional Report
         </button>
       </div>
 
@@ -242,8 +197,9 @@ const Dashboard = ({ students }) => {
                 <div className="flex-1 w-full min-h-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={pieData}
+                        <Pie
+                          isAnimationActive={false}
+                          data={pieData}
                         cx="50%"
                         cy="50%"
                         innerRadius={35}
@@ -294,7 +250,13 @@ const Dashboard = ({ students }) => {
                   cursor={{fill: 'rgba(255,255,255,0.05)'}}
                   contentStyle={{ backgroundColor: '#111114', border: '1px solid #ffffff10', borderRadius: '12px' }}
                 />
-                <Bar dataKey="avg" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={40} />
+                <Bar 
+                  isAnimationActive={false}
+                  dataKey="avg" 
+                  fill="#3b82f6" 
+                  radius={[6, 6, 0, 0]} 
+                  barSize={40} 
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
